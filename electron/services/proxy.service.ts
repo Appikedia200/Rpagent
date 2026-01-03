@@ -147,7 +147,7 @@ export class ProxyService {
         return {
           host: url.hostname,
           port: parseInt(url.port) || (url.protocol === 'socks5:' || url.protocol === 'socks4:' ? 1080 : 8080),
-          protocol: url.protocol.replace(':', '') as ProxyProtocol || ProxyProtocol.SOCKS5,
+          protocol: url.protocol.replace(':', '') as ProxyProtocol || ProxyProtocol.HTTP,
           username: url.username || undefined,
           password: url.password || undefined,
         };
@@ -159,7 +159,7 @@ export class ProxyService {
         return {
           host: parts[0],
           port: parseInt(parts[1]),
-          protocol: ProxyProtocol.SOCKS5, // Default to SOCKS5 for static IPs
+          protocol: ProxyProtocol.HTTP, // Default to HTTP for better compatibility with Chromium
           username: parts[2],
           password: parts[3],
         };
@@ -170,7 +170,7 @@ export class ProxyService {
         return {
           host: parts[0],
           port: parseInt(parts[1]),
-          protocol: ProxyProtocol.SOCKS5,
+          protocol: ProxyProtocol.HTTP, // Default to HTTP for better compatibility
         };
       }
 
@@ -298,7 +298,9 @@ export class ProxyService {
       // Make sure to update status even on error
       try {
         this.repository.updateStatus(id, ProxyStatus.ERROR);
-      } catch {}
+      } catch (updateError) {
+        logger.warn('Failed to update proxy status after test error', { error: updateError, proxyId: id });
+      }
       
       throw new ProxyServiceError(
         'Failed to test proxy',
@@ -373,8 +375,8 @@ export class ProxyService {
           agent = new HttpsProxyAgent(proxyUrl);
         }
 
-        // Make request to IP detection service
-        const testUrl = 'https://api.ipify.org?format=json';
+        // Make request to IP detection service (configurable via env)
+        const testUrl = process.env.PROXY_TEST_URL || 'https://api.ipify.org?format=json';
         
         const req = https.request(testUrl, { agent, timeout }, (res) => {
           if (timedOut) return;

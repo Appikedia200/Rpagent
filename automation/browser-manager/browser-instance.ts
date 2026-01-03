@@ -664,8 +664,8 @@ export class BrowserInstance {
     if (this.context) {
       try {
         await this.context.close();
-      } catch {
-        // Ignore close errors
+      } catch (closeError) {
+        logger.debug('Context close error (expected if already closed)', { error: closeError });
       }
       this.context = null;
       this.page = null;
@@ -675,8 +675,8 @@ export class BrowserInstance {
     if (this.browser) {
       try {
         await this.browser.close();
-      } catch {
-        // Ignore close errors
+      } catch (closeError) {
+        logger.debug('Browser close error (expected if already closed)', { error: closeError });
       }
       this.browser = null;
     }

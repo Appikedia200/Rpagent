@@ -56,17 +56,54 @@ export class BrowserService {
         hasProxyAssigned: !!workspace.proxyId,
       });
 
-      // Get proxy if assigned
+      // Get proxy if assigned - CRITICAL VERIFICATION
       let proxy: Proxy | undefined;
       if (workspace.proxyId) {
         proxy = this.proxyRepo.findById(workspace.proxyId) ?? undefined;
-        logger.info('BrowserService: Proxy loaded', { 
-          proxyId: workspace.proxyId,
-          proxyFound: !!proxy,
-          proxyDetails: proxy ? { host: proxy.host, port: proxy.port, protocol: proxy.protocol } : null,
-        });
+        
+        if (proxy) {
+          logger.info('✅ BrowserService: Proxy FOUND and LOADED', { 
+            proxyId: workspace.proxyId,
+            proxyHost: proxy.host,
+            proxyPort: proxy.port,
+            proxyProtocol: proxy.protocol,
+            proxyType: (proxy as any).type || 'unknown',
+            hasUsername: !!proxy.username,
+            hasPassword: !!proxy.password,
+            proxyStatus: proxy.status,
+          });
+          
+          // CRITICAL: Verify proxy credentials exist
+          if (!proxy.username || !proxy.password) {
+            logger.error('❌ BrowserService: Proxy missing credentials!', { 
+              proxyId: proxy.id,
+              hasUsername: !!proxy.username,
+              hasPassword: !!proxy.password,
+              recommendation: 'Add username and password to proxy configuration'
+            });
+          }
+          
+          // CRITICAL: Verify proxy protocol is HTTP (best for authenticated proxies)
+          if (proxy.protocol !== 'http' && proxy.protocol !== 'https') {
+            logger.warn('⚠️ BrowserService: Proxy protocol is not HTTP!', { 
+              protocol: proxy.protocol,
+              proxyId: proxy.id,
+              recommendation: 'Use HTTP protocol for proxies with authentication - Chromium does not support SOCKS5 auth'
+            });
+          }
+        } else {
+          logger.error('❌ BrowserService: Workspace has proxyId but proxy NOT FOUND in database!', { 
+            workspaceId,
+            missingProxyId: workspace.proxyId,
+            recommendation: 'Check if proxy was deleted or database is inconsistent'
+          });
+        }
       } else {
-        logger.warn('BrowserService: No proxy assigned to workspace', { workspaceId });
+        logger.warn('⚠️ BrowserService: No proxyId assigned to workspace', { 
+          workspaceId,
+          workspaceName: workspace.name,
+          recommendation: 'Assign a proxy to this workspace before launching'
+        });
       }
 
       // Update workspace status
@@ -99,8 +136,8 @@ export class BrowserService {
       // Update workspace status to error
       try {
         this.workspaceRepo.updateStatus(workspaceId, WorkspaceStatus.ERROR);
-      } catch {
-        // Ignore status update error
+      } catch (statusError) {
+        logger.warn('Failed to update workspace status to ERROR', { error: statusError, workspaceId });
       }
 
       // Pass through the ACTUAL error message, not a generic one
@@ -220,8 +257,8 @@ export class BrowserService {
       for (const id of workspaceIds) {
         try {
           this.workspaceRepo.updateStatus(id, WorkspaceStatus.IDLE);
-        } catch {
-          // Ignore individual status update errors
+        } catch (statusError) {
+          logger.warn('Failed to update workspace status after close', { error: statusError, workspaceId: id });
         }
       }
 
