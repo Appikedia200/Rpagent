@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.enterprise.rpa-agent",
+  "productName": "Enterprise RPA Agent",
+  "copyright": "Copyright © 2024 Enterprise RPA Agent",
+  "asar": true,
+  "asarUnpack": [
+    "node_modules/better-sqlite3/**/*"
+  ],
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist-electron/**/*",
+    "out/**/*",
+    "public/**/*",
+    "electron/database/migrations/**/*",
+    "shared/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "dir",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "${productName}-${version}",
+    "signAndEditExecutable": false
+  },
+  "publish": null
+}

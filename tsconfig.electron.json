@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "outDir": "dist-electron",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "noEmit": false,
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true
+  },
+  "include": [
+    "electron/**/*",
+    "automation/**/*",
+    "shared/**/*",
+    "types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "src",
+    "dist-electron",
+    ".next"
+  ]
+}
