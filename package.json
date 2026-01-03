@@ -20,7 +20,9 @@
     "dist:win": "npm run build && electron-builder --win",
     "lint": "eslint . --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "postinstall": "npx playwright install chromium"
+    "postinstall": "npx playwright install chromium",
+    "debug:proxy": "npm run build:electron && node dist-electron/electron/scripts/debug-proxy.js",
+    "setup:proxy": "npm run build:electron && node dist-electron/electron/scripts/setup-working-proxy.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
